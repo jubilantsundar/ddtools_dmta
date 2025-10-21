@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTools DMTA - Drug Discovery DMTA Cycle Tools</title>
+    <meta name="description" content="Interactive DMTA cycle visualization for drug discovery with open source computational tools">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState } = React;
+        const { X, ExternalLink, ChevronLeft } = lucide;
+
+        const DMTASunburst = () => {
+          const [selectedPath, setSelectedPath] = useState([]);
+          const [showTools, setShowTools] = useState(false);
+
+          const tools = {
+            'Hit-ID-Docking': [
+              { name: 'AutoDock Vina', url: 'https://github.com/ccsb-scripps/AutoDock-Vina', desc: 'Molecular docking and virtual screening' },
+              { name: 'smina', url: 'https://github.com/mwojcikowski/smina', desc: 'Fork of AutoDock Vina with custom scoring' },
+              { name: 'GNINA', url: 'https://github.com/gnina/gnina', desc: 'Deep learning framework for molecular docking' },
+              { name: 'LeDock', url: 'https://github.com/igridchyn/ledock', desc: 'Fast and accurate docking program' }
+            ],
+            'Hit-ID-Pharmacophore': [
+              { name: 'Pharmit', url: 'https://github.com/dkoes/pharmit', desc: 'Interactive pharmacophore-based virtual screening' },
+              { name: 'Pharao', url: 'https://github.com/UnixJunkie/pharao', desc: 'Pharmacophore search and alignment' },
+              { name: 'Open3DALIGN', url: 'https://github.com/UnixJunkie/Open3DALIGN', desc: 'Pharmacophore-based alignment tool' },
+              { name: 'Align-it', url: 'https://github.com/silicos-it/align-it', desc: 'Pharmacophore-based molecular alignment' }
+            ],
+            'Hit-to-Lead-Similarity': [
+              { name: 'RDKit', url: 'https://github.com/rdkit/rdkit', desc: 'Molecular similarity metrics (Tanimoto, etc.)' },
+              { name: 'FPSim2', url: 'https://github.com/chembl/FPSim2', desc: 'Fast molecular similarity search' },
+              { name: 'chemfp', url: 'https://github.com/chemfp/chemfp', desc: 'High-performance fingerprint search' }
+            ],
+            'Hit-to-Lead-Shape': [
+              { name: 'PAPER', url: 'https://github.com/UnixJunkie/PAPER', desc: 'Molecular shape-based alignment' },
+              { name: 'Open3DQSAR', url: 'https://github.com/UnixJunkie/Open3DQSAR', desc: 'Shape-based QSAR modeling' },
+              { name: 'Shape-it', url: 'https://github.com/silicos-it/shape-it', desc: 'Shape-based molecular alignment' }
+            ],
+            'Hit-to-Lead-Scaffold': [
+              { name: 'ScaffoldGraph', url: 'https://github.com/UCLCheminformatics/ScaffoldGraph', desc: 'Scaffold network generation and hopping' },
+              { name: 'REINVENT4', url: 'https://github.com/MolecularAI/REINVENT4', desc: 'AI-driven de novo design and scaffold hopping' },
+              { name: 'Scaffold Network', url: 'https://github.com/rdkit/rdkit', desc: 'Bemis-Murcko scaffold decomposition in RDKit' },
+              { name: 'mmpdb', url: 'https://github.com/rdkit/mmpdb', desc: 'Matched molecular pair database for scaffold exploration' },
+              { name: 'Mol_frame', url: 'https://github.com/apahl/mol_frame', desc: 'Scaffold analysis and hopping' }
+            ],
+            'Hit-to-Lead-Pharmacophore': [
+              { name: 'Pharmit', url: 'https://github.com/dkoes/pharmit', desc: 'Ligand-based pharmacophore screening' },
+              { name: 'RDKit Pharmacophore', url: 'https://github.com/rdkit/rdkit', desc: 'Pharmacophore fingerprints and matching' },
+              { name: 'OpenPharma', url: 'https://github.com/UnixJunkie/align-it', desc: 'Pharmacophore alignment tools' }
+            ],
+            'Hit-to-Lead-Topliss': [
+              { name: 'RDKit', url: 'https://github.com/rdkit/rdkit', desc: 'SAR analysis and analog generation' },
+              { name: 'Topliss Trees', url: 'https://github.com/PatWalters/practical_cheminformatics_tutorials', desc: 'Topliss scheme implementation and SAR' },
+              { name: 'SARM', url: 'https://github.com/iwatobipen/SARM', desc: 'SAR matrix visualization' },
+              { name: 'DeepSAR', url: 'https://github.com/ml-jku/lsc', desc: 'ML-based SAR prediction' }
+            ],
+            'Lead-Opt-Bioisostere': [
+              { name: 'BioisostereFinder', url: 'https://github.com/rinikerlab/bioisostere', desc: 'Find bioisosteric replacements' },
+              { name: 'SwissBioisostere', url: 'https://github.com/reymond-group/smilesDrawer', desc: 'Bioisostere database search' },
+              { name: 'RDKit Bioisosteres', url: 'https://github.com/rdkit/rdkit', desc: 'Substructure replacement tools' }
+            ],
+            'Lead-Opt-RGroup': [
+              { name: 'RDKit R-Group Decomposition', url: 'https://github.com/rdkit/rdkit', desc: 'R-group enumeration and analysis' },
+              { name: 'Molecular Sets (MOSES)', url: 'https://github.com/molecularsets/moses', desc: 'Generative models for molecular design' },
+              { name: 'REINVENT', url: 'https://github.com/MolecularAI/REINVENT4', desc: 'AI-driven molecular optimization and R-group exploration' },
+              { name: 'Enamine REAL Tools', url: 'https://github.com/Enamine/Real', desc: 'Tools for exploring chemical space and enumeration' }
+            ],
+            'Lead-Opt-ADME': [
+              { name: 'ADMET_AI', url: 'https://github.com/swansonk14/admet_ai', desc: 'ML models for ADMET prediction' },
+              { name: 'ADMETlab 2.0', url: 'https://github.com/ifyoungnet/ADMETlab2.0', desc: 'Comprehensive ADMET prediction platform' },
+              { name: 'DeepPurpose', url: 'https://github.com/kexinhuang12345/DeepPurpose', desc: 'Drug property prediction toolkit' },
+              { name: 'Chemprop', url: 'https://github.com/chemprop/chemprop', desc: 'ML on molecular graphs for property prediction' }
+            ],
+            'Make-Retrosynthesis': [
+              { name: 'AiZynthFinder', url: 'https://github.com/MolecularAI/aizynthfinder', desc: 'Retrosynthetic route planning' },
+              { name: 'RetroXpert', url: 'https://github.com/uta-smile/RetroXpert', desc: 'Template-based retrosynthesis' },
+              { name: 'Molecular Transformer', url: 'https://github.com/pschwllr/MolecularTransformer', desc: 'Neural retrosynthesis' },
+              { name: 'ASKCOS', url: 'https://github.com/ASKCOS/askcos-core', desc: 'Automated synthesis planning' }
+            ],
+            'Make-Availability': [
+              { name: 'molbloom', url: 'https://github.com/whitead/molbloom', desc: 'Check compound availability in databases' },
+              { name: 'ZINC Database Tools', url: 'https://github.com/docking-org/zinc22-2d', desc: 'Search commercially available compounds' },
+              { name: 'PubChem PUG', url: 'https://github.com/mcs07/PubChemPy', desc: 'Query PubChem for compound availability' }
+            ],
+            'Make-SynAccess': [
+              { name: 'RDKit SAScore', url: 'https://github.com/rdkit/rdkit', desc: 'Synthetic accessibility score implementation in RDKit' },
+              { name: 'SCScore', url: 'https://github.com/connorcoley/scscore', desc: 'ML-based synthetic complexity score' },
+              { name: 'RAscore', url: 'https://github.com/reymond-group/RAscore', desc: 'Retrosynthetic accessibility score' },
+              { name: 'SYBA', url: 'https://github.com/lich-uct/syba', desc: 'Synthesizability Bayesian classifier' },
+              { name: 'ASKCOS SAScore', url: 'https://github.com/ASKCOS/askcos-core', desc: 'Synthetic accessibility in ASKCOS' },
+              { name: 'SyntheMol', url: 'https://github.com/swansonk14/SyntheMol', desc: 'Synthesizable molecule generation and scoring' }
+            ],
+            'Make-ReactionEnum': [
+              { name: 'RDKit Chemical Reactions', url: 'https://github.com/rdkit/rdkit', desc: 'Reaction-based enumeration tools' },
+              { name: 'ASKCOS Enumeration', url: 'https://github.com/ASKCOS/askcos-core', desc: 'Combinatorial library enumeration' },
+              { name: 'SynthI', url: 'https://github.com/molecularinformatics/synthI', desc: 'Chemical reaction informatics' }
+            ],
+            'Test-DrugSimilarity': [
+              { name: 'DrugBank Parser', url: 'https://github.com/dhimmel/drugbank', desc: 'Extract and compare to approved drugs' },
+              { name: 'ChEMBL Interface', url: 'https://github.com/chembl/chembl_webresource_client', desc: 'Query approved drugs and targets' },
+              { name: 'SEA (Similarity Ensemble Approach)', url: 'https://github.com/keiserlab/sea', desc: 'Predict off-targets by drug similarity' }
+            ],
+            'Test-OffTarget': [
+              { name: 'BindingDB Tools', url: 'https://github.com/beastylee/bindingdb', desc: 'Off-target prediction database' },
+              { name: 'DeepTarget', url: 'https://github.com/KyGao/HTDocking', desc: 'Deep learning off-target prediction' },
+              { name: 'TargetNet', url: 'https://github.com/yangkevin2/coronavirus_data', desc: 'Multi-target prediction network' }
+            ],
+            'Test-Biomarker': [
+              { name: 'GEO Parser', url: 'https://github.com/guma44/GEOparse', desc: 'Gene Expression Omnibus data analysis' },
+              { name: 'PyDESeq2', url: 'https://github.com/owkin/PyDESeq2', desc: 'Differential expression analysis' },
+              { name: 'Scanpy', url: 'https://github.com/scverse/scanpy', desc: 'Single-cell analysis for biomarker discovery' }
+            ],
+            'Test-Toxicity': [
+              { name: 'DeepTox', url: 'https://github.com/aspuru-guzik-group/selfies', desc: 'Deep learning toxicity prediction' },
+              { name: 'pkCSM', url: 'https://github.com/Douglas-xD/pkCSM', desc: 'Toxicity and pharmacokinetics prediction' },
+              { name: 'Tox21 Models', url: 'https://github.com/ncats/tox21-challenge', desc: 'Toxicity challenge datasets and models' }
+            ],
+            'Analyze-Plotting': [
+              { name: 'Seaborn', url: 'https://github.com/mwaskom/seaborn', desc: 'Statistical data visualization' },
+              { name: 'Plotly', url: 'https://github.com/plotly/plotly.py', desc: 'Interactive plotting for SAR analysis' },
+              { name: 'Matplotlib', url: 'https://github.com/matplotlib/matplotlib', desc: 'Comprehensive plotting library' }
+            ],
+            'Analyze-ROC': [
+              { name: 'scikit-learn', url: 'https://github.com/scikit-learn/scikit-learn', desc: 'ROC curves and ML metrics' },
+              { name: 'ROCR', url: 'https://github.com/ipa-tys/ROCR', desc: 'ROC curve visualization' },
+              { name: 'yellowbrick', url: 'https://github.com/DistrictDataLabs/yellowbrick', desc: 'ML visualization including ROC' }
+            ],
+            'Analyze-RGroup': [
+              { name: 'RDKit R-Group', url: 'https://github.com/rdkit/rdkit', desc: 'R-group decomposition and analysis' },
+              { name: 'mmpdb', url: 'https://github.com/rdkit/mmpdb', desc: 'Matched molecular pair analysis' },
+              { name: 'SARpy', url: 'https://github.com/UnixJunkie/sarpy', desc: 'SAR analysis with R-groups' }
+            ],
+            'Analyze-MMP': [
+              { name: 'mmpdb', url: 'https://github.com/rdkit/mmpdb', desc: 'Matched molecular pair database' },
+              { name: 'RDKit MMP', url: 'https://github.com/rdkit/rdkit', desc: 'MMP generation tools' },
+              { name: 'FPSim2 MMP', url: 'https://github.com/chembl/FPSim2', desc: 'Fast MMP searching' }
+            ],
+            'Analyze-ActivityCliff': [
+              { name: 'SARI', url: 'https://github.com/irregularengineering/sari', desc: 'Structure-activity relationships' },
+              { name: 'MoleculeACE', url: 'https://github.com/molML/MoleculeACE', desc: 'Activity cliff estimation' },
+              { name: 'ActivityCliffs', url: 'https://github.com/jose-manuel/activity_cliffs', desc: 'Activity cliff analysis toolkit' }
+            ],
+            'Analyze-ADME-ML': [
+              { name: 'ADMET_AI', url: 'https://github.com/swansonk14/admet_ai', desc: 'State-of-the-art ADMET prediction' },
+              { name: 'Chemprop', url: 'https://github.com/chemprop/chemprop', desc: 'Message passing neural networks' },
+              { name: 'DeepChem', url: 'https://github.com/deepchem/deepchem', desc: 'Deep learning for drug discovery' }
+            ]
+          };
+
+          const data = {
+            name: 'DMTA',
+            children: [
+              {
+                name: 'Design',
+                color: '#3b82f6',
+                children: [
+                  {
+                    name: 'Hit-ID',
+                    children: [
+                      { name: 'Docking', toolKey: 'Hit-ID-Docking' },
+                      { name: 'Pharmacophore', toolKey: 'Hit-ID-Pharmacophore' }
+                    ]
+                  },
+                  {
+                    name: 'Hit-to-Lead',
+                    children: [
+                      { name: 'Similarity', toolKey: 'Hit-to-Lead-Similarity' },
+                      { name: 'Shape', toolKey: 'Hit-to-Lead-Shape' },
+                      { name: 'Scaffold Hopping', toolKey: 'Hit-to-Lead-Scaffold' },
+                      { name: 'Pharmacophore', toolKey: 'Hit-to-Lead-Pharmacophore' },
+                      { name: 'Topliss/SAR', toolKey: 'Hit-to-Lead-Topliss' }
+                    ]
+                  },
+                  {
+                    name: 'Lead-Opt',
+                    children: [
+                      { name: 'Bioisostere', toolKey: 'Lead-Opt-Bioisostere' },
+                      { name: 'R-Group Enum', toolKey: 'Lead-Opt-RGroup' },
+                      { name: 'ADME Models', toolKey: 'Lead-Opt-ADME' }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: 'Make',
+                color: '#10b981',
+                children: [
+                  { name: 'Retrosynthesis', toolKey: 'Make-Retrosynthesis' },
+                  { name: 'Availability', toolKey: 'Make-Availability' },
+                  { name: 'SynAccess Score', toolKey: 'Make-SynAccess' },
+                  { name: 'Reaction Enum', toolKey: 'Make-ReactionEnum' }
+                ]
+              },
+              {
+                name: 'Test',
+                color: '#f59e0b',
+                children: [
+                  { name: 'Drug Similarity', toolKey: 'Test-DrugSimilarity' },
+                  { name: 'Off-Target', toolKey: 'Test-OffTarget' },
+                  { name: 'Biomarker ID', toolKey: 'Test-Biomarker' },
+                  { name: 'Toxicity', toolKey: 'Test-Toxicity' }
+                ]
+              },
+              {
+                name: 'Analyze',
+                color: '#8b5cf6',
+                children: [
+                  { name: 'Data Plotting', toolKey: 'Analyze-Plotting' },
+                  { name: 'ROC Curves', toolKey: 'Analyze-ROC' },
+                  { name: 'R-Group Decomp', toolKey: 'Analyze-RGroup' },
+                  { name: 'MMP Analysis', toolKey: 'Analyze-MMP' },
+                  { name: 'Activity Cliffs', toolKey: 'Analyze-ActivityCliff' },
+                  { name: 'ADME ML', toolKey: 'Analyze-ADME-ML' }
+                ]
+              }
+            ]
+          };
+
+          const handleClick = (path, node) => {
+            if (node.toolKey && tools[node.toolKey]) {
+              setSelectedPath(path);
+              setShowTools(true);
+            } else if (node.children) {
+              setSelectedPath(path);
+              setShowTools(false);
+            }
+          };
+
+          const handleBack = () => {
+            if (selectedPath.length > 0) {
+              setSelectedPath(selectedPath.slice(0, -1));
+              setShowTools(false);
+            }
+          };
+
+          const getSegmentPath = (startAngle, endAngle, innerRadius, outerRadius) => {
+            const start = polarToCartesian(0, 0, outerRadius, endAngle);
+            const end = polarToCartesian(0, 0, outerRadius, startAngle);
+            const innerStart = polarToCartesian(0, 0, innerRadius, endAngle);
+            const innerEnd = polarToCartesian(0, 0, innerRadius, startAngle);
+            const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+            
+            return [
+              `M ${start.x} ${start.y}`,
+              `A ${outerRadius} ${outerRadius} 0 ${largeArc} 0 ${end.x} ${end.y}`,
+              `L ${innerEnd.x} ${innerEnd.y}`,
+              `A ${innerRadius} ${innerRadius} 0 ${largeArc} 1 ${innerStart.x} ${innerStart.y}`,
+              'Z'
+            ].join(' ');
+          };
+
+          const polarToCartesian = (cx, cy, radius, angle) => {
+            const rad = (angle - 90) * Math.PI / 180;
+            return {
+              x: cx + radius * Math.cos(rad),
+              y: cy + radius * Math.sin(rad)
+            };
+          };
+
+          const darkenColor = (color, percent) => {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) - amt;
+            const G = (num >> 8 & 0x00FF) - amt;
+            const B = (num & 0x0000FF) - amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+              (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+              (B < 255 ? B < 1 ? 0 : B : 255))
+              .toString(16).slice(1);
+          };
+
+          const renderSegments = () => {
+            const segments = [];
+            const mainSections = data.children;
+            const anglePerMainSection = 360 / mainSections.length;
+            
+            mainSections.forEach((mainNode, mainIdx) => {
+              const mainStartAngle = mainIdx * anglePerMainSection;
+              const mainEndAngle = (mainIdx + 1) * anglePerMainSection;
+              const isMainSelected = selectedPath.length > 0 && selectedPath[0] === mainNode.name;
+              
+              segments.push(
+                React.createElement('g', { key: `main-${mainIdx}` },
+                  React.createElement('path', {
+                    d: getSegmentPath(mainStartAngle, mainEndAngle, 100, 210),
+                    fill: mainNode.color,
+                    stroke: 'white',
+                    strokeWidth: '3',
+                    className: `cursor-pointer transition-all ${isMainSelected ? 'opacity-100' : 'hover:opacity-80'}`,
+                    onClick: () => handleClick([mainNode.name], mainNode)
+                  }),
+                  React.createElement('text', {
+                    x: polarToCartesian(0, 0, 155, mainStartAngle + anglePerMainSection / 2).x,
+                    y: polarToCartesian(0, 0, 155, mainStartAngle + anglePerMainSection / 2).y,
+                    textAnchor: 'middle',
+                    dominantBaseline: 'middle',
+                    fill: 'white',
+                    className: 'text-xl font-bold pointer-events-none'
+                  }, mainNode.name)
+                )
+              );
+              
+              if (isMainSelected && mainNode.children) {
+                const level2Children = mainNode.children;
+                const midAngle = mainStartAngle + anglePerMainSection / 2;
+                const anglePerLevel2 = 35;
+                const totalAngleSpan = anglePerLevel2 * level2Children.length;
+                const startOffset = midAngle - totalAngleSpan / 2;
+                
+                level2Children.forEach((level2Node, level2Idx) => {
+                  const level2StartAngle = startOffset + level2Idx * anglePerLevel2;
+                  const level2EndAngle = startOffset + (level2Idx + 1) * anglePerLevel2;
+                  const isLevel2Selected = selectedPath.length > 1 && selectedPath[1] === level2Node.name;
+                  
+                  segments.push(
+                    React.createElement('g', { key: `level2-${mainIdx}-${level2Idx}` },
+                      React.createElement('path', {
+                        d: getSegmentPath(level2StartAngle, level2EndAngle, 220, 330),
+                        fill: darkenColor(mainNode.color, 15),
+                        stroke: 'white',
+                        strokeWidth: '3',
+                        className: `cursor-pointer transition-all ${isLevel2Selected ? 'opacity-100' : 'hover:opacity-80'}`,
+                        onClick: () => handleClick([mainNode.name, level2Node.name], level2Node)
+                      }),
+                      React.createElement('text', {
+                        x: polarToCartesian(0, 0, 275, level2StartAngle + anglePerLevel2 / 2).x,
+                        y: polarToCartesian(0, 0, 275, level2StartAngle + anglePerLevel2 / 2).y,
+                        textAnchor: 'middle',
+                        dominantBaseline: 'middle',
+                        fill: 'white',
+                        className: 'text-base font-semibold pointer-events-none'
+                      }, level2Node.name)
+                    )
+                  );
+                  
+                  if (isLevel2Selected && level2Node.children) {
+                    const level3Children = level2Node.children;
+                    const level2MidAngle = level2StartAngle + anglePerLevel2 / 2;
+                    const anglePerLevel3 = 25;
+                    const totalLevel3Span = anglePerLevel3 * level3Children.length;
+                    const level3StartOffset = level2MidAngle - totalLevel3Span / 2;
+                    
+                    level3Children.forEach((level3Node, level3Idx) => {
+                      const level3StartAngle = level3StartOffset + level3Idx * anglePerLevel3;
+                      const level3EndAngle = level3StartOffset + (level3Idx + 1) * anglePerLevel3;
+                      
+                      segments.push(
+                        React.createElement('g', { key: `level3-${mainIdx}-${level2Idx}-${level3Idx}` },
+                          React.createElement('path', {
+                            d: getSegmentPath(level3StartAngle, level3EndAngle, 340, 450),
+                            fill: darkenColor(mainNode.color, 35),
+                            stroke: 'white',
+                            strokeWidth: '3',
+                            className: 'cursor-pointer transition-all hover:opacity-80',
+                            onClick: () => handleClick([mainNode.name, level2Node.name, level3Node.name], level3Node)
+                          }),
+                          React.createElement('text', {
+                            x: polarToCartesian(0, 0, 395, level3StartAngle + anglePerLevel3 / 2).x,
+                            y: polarToCartesian(0, 0, 395, level3StartAngle + anglePerLevel3 / 2).y,
+                            textAnchor: 'middle',
+                            dominantBaseline: 'middle',
+                            fill: 'white',
+                            className: 'text-sm font-semibold pointer-events-none'
+                          }, level3Node.name)
+                        )
+                      );
+                    });
+                  }
+                });
+              }
+            });
+            
+            return segments;
+          };
+
+          const getCurrentTools = () => {
+            if (selectedPath.length === 0) return null;
+            const lastSegment = selectedPath[selectedPath.length - 1];
+            
+            for (const [key, value] of Object.entries(tools)) {
+              if (key.includes(lastSegment.replace(/\s+/g, '')) || 
+                  key.includes(selectedPath.join('-').replace(/\s+/g, ''))) {
+                return { key, tools: value };
+              }
+            }
+            return null;
+          };
+
+          const currentTools = getCurrentTools();
+
+          return React.createElement('div', { className: 'w-full h-screen bg-gray-50 flex' },
+            React.createElement('div', { className: 'flex-1 flex items-center justify-center p-8' },
+              React.createElement('div', { className: 'relative' },
+                React.createElement('svg', { width: 1000, height: 1000, viewBox: '-500 -500 1000 1000' },
+                  React.createElement('circle', { cx: 0, cy: 0, r: 90, fill: '#1f2937' }),
+                  React.createElement('text', {
+                    x: 0,
+                    y: -8,
+                    textAnchor: 'middle',
+                    dominantBaseline: 'middle',
+                    fill: 'white',
+                    className: 'text-3xl font-bold'
+                  }, 'DMTA'),
+                  React.createElement('text', {
+                    x: 0,
+                    y: 20,
+                    textAnchor: 'middle',
+                    dominantBaseline: 'middle',
+                    fill: 'white',
+                    className: 'text-base'
+                  }, 'Cycle'),
+                  renderSegments()
+                ),
+                selectedPath.length > 0 && React.createElement('div', { className: 'absolute top-4 left-4' },
+                  React.createElement('button', {
+                    onClick: handleBack,
+                    className: 'flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-50 transition-colors'
+                  },
+                    React.createElement(ChevronLeft, { size: 20 }),
+                    React.createElement('span', { className: 'text-sm font-semibold' }, 'Back')
+                  ),
+                  React.createElement('div', { className: 'mt-2 bg-white p-3 rounded-lg shadow-lg' },
+                    React.createElement('div', { className: 'text-sm font-semibold text-gray-700' },
+                      selectedPath.join(' → ')
+                    )
+                  )
+                )
+              )
+            ),
+            showTools && currentTools && React.createElement('div', {
+              className: 'fixed top-20 right-8 w-80 max-h-[calc(100vh-6rem)] bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-gray-200 z-50'
+            },
+              React.createElement('div', {
+                className: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 flex justify-between items-center'
+              },
+                React.createElement('div', { className: 'flex-1 min-w-0' },
+                  React.createElement('h2', { className: 'text-base font-bold' }, 'GitHub Tools'),
+                  React.createElement('p', { className: 'text-xs opacity-90 truncate' }, selectedPath.join(' → '))
+                ),
+                React.createElement('button', {
+                  onClick: () => setShowTools(false),
+                  className: 'hover:bg-blue-800 p-1 rounded transition-colors ml-2 flex-shrink-0'
+                },
+                  React.createElement(X, { size: 18 })
+                )
+              ),
+              React.createElement('div', {
+                className: 'overflow-y-auto p-3',
+                style: { maxHeight: 'calc(100vh - 12rem)' }
+              },
+                currentTools.tools.map((tool, idx) =>
+                  React.createElement('div', {
+                    key: idx,
+                    className: 'mb-3 p-3 border border-gray-200 rounded-md hover:shadow-md transition-all bg-white hover:border-blue-300'
+                  },
+                    React.createElement('h3', { className: 'font-semibold text-gray-900 text-sm mb-1' }, tool.name),
+                    React.createElement('p', { className: 'text-xs text-gray-600 mb-2 line-clamp-2' }, tool.desc),
+                    React.createElement('a', {
+                      href: tool.url,
+                      target: '_blank',
+                      rel: 'noopener noreferrer',
+                      className: 'inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium hover:underline'
+                    },
+                      React.createElement(ExternalLink, { size: 14 }),
+                      'View on GitHub'
+                    )
+                  )
+                )
+              )
+            )
+          );
+        };
+
+        ReactDOM.render(
+          React.createElement(DMTASunburst),
+          document.getElementById('root')
+        );
+    </script>
+</body>
+</html>
