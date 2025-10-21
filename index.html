@@ -183,32 +183,32 @@
               { name: 'pkCSM', url: 'https://github.com/Douglas-xD/pkCSM', desc: 'Toxicity and pharmacokinetics prediction' },
               { name: 'Tox21 Models', url: 'https://github.com/ncats/tox21-challenge', desc: 'Toxicity challenge datasets and models' }
             ],
-            'Analyze-Plotting': [
+            'Analyze-DataPlotting': [
               { name: 'Seaborn', url: 'https://github.com/mwaskom/seaborn', desc: 'Statistical data visualization' },
               { name: 'Plotly', url: 'https://github.com/plotly/plotly.py', desc: 'Interactive plotting for SAR analysis' },
               { name: 'Matplotlib', url: 'https://github.com/matplotlib/matplotlib', desc: 'Comprehensive plotting library' }
             ],
-            'Analyze-ROC': [
+            'Analyze-ROCCurves': [
               { name: 'scikit-learn', url: 'https://github.com/scikit-learn/scikit-learn', desc: 'ROC curves and ML metrics' },
               { name: 'ROCR', url: 'https://github.com/ipa-tys/ROCR', desc: 'ROC curve visualization' },
               { name: 'yellowbrick', url: 'https://github.com/DistrictDataLabs/yellowbrick', desc: 'ML visualization including ROC' }
             ],
-            'Analyze-RGroup': [
+            'Analyze-RGroupDecomp': [
               { name: 'RDKit R-Group', url: 'https://github.com/rdkit/rdkit', desc: 'R-group decomposition and analysis' },
               { name: 'mmpdb', url: 'https://github.com/rdkit/mmpdb', desc: 'Matched molecular pair analysis' },
               { name: 'SARpy', url: 'https://github.com/UnixJunkie/sarpy', desc: 'SAR analysis with R-groups' }
             ],
-            'Analyze-MMP': [
+            'Analyze-MMPAnalysis': [
               { name: 'mmpdb', url: 'https://github.com/rdkit/mmpdb', desc: 'Matched molecular pair database' },
               { name: 'RDKit MMP', url: 'https://github.com/rdkit/rdkit', desc: 'MMP generation tools' },
               { name: 'FPSim2 MMP', url: 'https://github.com/chembl/FPSim2', desc: 'Fast MMP searching' }
             ],
-            'Analyze-ActivityCliff': [
+            'Analyze-ActivityCliffs': [
               { name: 'SARI', url: 'https://github.com/irregularengineering/sari', desc: 'Structure-activity relationships' },
               { name: 'MoleculeACE', url: 'https://github.com/molML/MoleculeACE', desc: 'Activity cliff estimation' },
               { name: 'ActivityCliffs', url: 'https://github.com/jose-manuel/activity_cliffs', desc: 'Activity cliff analysis toolkit' }
             ],
-            'Analyze-ADME-ML': [
+            'Analyze-ADMEML': [
               { name: 'ADMET_AI', url: 'https://github.com/swansonk14/admet_ai', desc: 'State-of-the-art ADMET prediction' },
               { name: 'Chemprop', url: 'https://github.com/chemprop/chemprop', desc: 'Message passing neural networks' },
               { name: 'DeepChem', url: 'https://github.com/deepchem/deepchem', desc: 'Deep learning for drug discovery' }
@@ -273,12 +273,12 @@
                 name: 'Analyze',
                 color: '#8b5cf6',
                 children: [
-                  { name: 'Data Plotting', toolKey: 'Analyze-Plotting' },
-                  { name: 'ROC Curves', toolKey: 'Analyze-ROC' },
-                  { name: 'R-Group Decomp', toolKey: 'Analyze-RGroup' },
-                  { name: 'MMP Analysis', toolKey: 'Analyze-MMP' },
-                  { name: 'Activity Cliffs', toolKey: 'Analyze-ActivityCliff' },
-                  { name: 'ADME ML', toolKey: 'Analyze-ADME-ML' }
+                  { name: 'Data Plotting', toolKey: 'Analyze-DataPlotting' },
+                  { name: 'ROC Curves', toolKey: 'Analyze-ROCCurves' },
+                  { name: 'R-Group Decomp', toolKey: 'Analyze-RGroupDecomp' },
+                  { name: 'MMP Analysis', toolKey: 'Analyze-MMPAnalysis' },
+                  { name: 'Activity Cliffs', toolKey: 'Analyze-ActivityCliffs' },
+                  { name: 'ADME ML', toolKey: 'Analyze-ADMEML' }
                 ]
               }
             ]
