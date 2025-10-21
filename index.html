@@ -443,17 +443,34 @@
 
           const getCurrentTools = () => {
             if (selectedPath.length === 0) return null;
-            const lastSegment = selectedPath[selectedPath.length - 1];
-            
-            for (const [key, value] of Object.entries(tools)) {
-              if (key.includes(lastSegment.replace(/\s+/g, '')) || 
-                  key.includes(selectedPath.join('-').replace(/\s+/g, ''))) {
-                return { key, tools: value };
+  
+            // Build the tool key from the selected path
+            let toolKey = '';
+  
+            if (selectedPath.length >= 2) {
+              const parent = selectedPath[0];
+              const child = selectedPath[selectedPath.length - 1];
+    
+              // Create the key format: "Parent-Child"
+              toolKey = `${parent}-${child.replace(/\s+/g, '')}`;
+    
+              // Check if this key exists in tools
+              if (tools[toolKey]) {
+                return { key: toolKey, tools: tools[toolKey] };
               }
             }
-            return null;
-          };
-
+  
+  // Fallback: try to match by the last segment
+  const lastSegment = selectedPath[selectedPath.length - 1].replace(/\s+/g, '');
+  
+  for (const [key, value] of Object.entries(tools)) {
+    if (key.includes(lastSegment)) {
+      return { key, tools: value };
+    }
+  }
+  
+  return null;
+};                       
           const currentTools = getCurrentTools();
 
           return React.createElement('div', { className: 'w-full h-screen bg-gray-50 flex' },
